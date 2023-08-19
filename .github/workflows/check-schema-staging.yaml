@@ -1,0 +1,49 @@
+name: Staging Check Schema
+on:
+  push:
+    branches:
+      - master
+jobs:
+  get_subgraph_name:
+    uses: ./.github/workflows/apollo.yaml
+
+  check_schema:
+    name: Check Schema with Apollo Studio
+    needs: [get_subgraph_name]
+    runs-on: ubuntu-latest
+    env:
+      APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+      APOLLO_GRAPH_ID: ${{ secrets.APOLLO_GRAPH_ID }}
+      PORT: 8080
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+          check-latest: true
+      - name: Install Rover
+        run: |
+          curl -sSL https://rover.apollo.dev/nix/latest | sh
+          echo "$HOME/.rover/bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: npm install
+      - name: Build & codegen
+        run: npm run codegen && tsc
+      - name: Start server
+        run: npm run start & sleep 10
+      - name: Introspect and run check
+        run: rover subgraph introspect http://localhost:${PORT} |
+          rover subgraph check ${APOLLO_GRAPH_ID}@staging --name ${{ needs.get_subgraph_name.outputs.name }} --schema -
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "14"
+  #         check-latest: true
+  #     - name: Setup project
+  #       run: npm install
+  #     - name: Test
+  #       run: npm run test

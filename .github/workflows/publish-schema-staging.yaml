@@ -1,0 +1,40 @@
+name: Staging Publish Schema
+on:
+  workflow_run:
+    workflows: ["Staging Check Schema"]
+    types:
+      - completed
+jobs:
+  get_subgraph_name:
+    uses: ./.github/workflows/apollo.yaml
+
+  publish_schema:
+    name: Publish new schema to Apollo Studio
+    needs: [get_subgraph_name]
+    runs-on: ubuntu-latest
+    env:
+      APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+      APOLLO_GRAPH_ID: ${{ secrets.APOLLO_GRAPH_ID }}
+      PORT: 8080
+      ROUTING_URL: ${{ secrects.ROUTING_URL }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+          check-latest: true
+      - name: Install Rover
+        run: |
+          curl -sSL https://rover.apollo.dev/nix/latest | sh
+          echo "$HOME/.rover/bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: npm install
+      - name: Build & codegen
+        run: npm run codegen && tsc
+      - name: Start server
+        run: npm run start & sleep 10
+      - name: Publish Schema
+        run:
+          rover subgraph introspect http://localhost:${PORT} |
+          rover subgraph publish ${APOLLO_GRAPH_ID}@staging --name ${{ needs.get_subgraph_name.outputs.name }} --routing-url ${ROUTING_URL} --schema -
+          # APOLLO_VCS_COMMIT: ${{ github.event.pull_request.head.sha }}
