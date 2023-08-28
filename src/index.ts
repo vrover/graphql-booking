@@ -4,7 +4,7 @@ import {
   startStandaloneServer,
 } from "@apollo/server/standalone";
 
-const port = process.env.PORT ?? "4003";
+const port = process.env.PORT ?? "8080";
 const subgraphName = require("../package.json").name;
 import {roomModule} from "./schema";
 import {BookingAPI} from "./datasources/booking";

@@ -1,14 +1,16 @@
 name: Staging Publish Schema
 on:
-  workflow_run:
-    workflows: ["Staging Check Schema"]
-    types:
-      - completed
+  workflow_dispatch:
+  # workflow_run:
+  #   workflows: ["Staging Check Schema"]
+  #   types:
+  #     - completed
 jobs:
   get_subgraph_name:
     uses: ./.github/workflows/apollo.yaml
 
   publish_schema:
+    if: github.actor == 'vrover'
     name: Publish new schema to Apollo Studio
     needs: [get_subgraph_name]
     runs-on: ubuntu-latest
@@ -34,7 +36,5 @@ jobs:
       - name: Start server
         run: npm run start & sleep 10
       - name: Publish Schema
-        run:
-          rover subgraph introspect http://localhost:${PORT} |
+        run: rover subgraph introspect http://localhost:${PORT} |
           rover subgraph publish ${APOLLO_GRAPH_ID}@staging --name ${{ needs.get_subgraph_name.outputs.name }} --routing-url ${ROUTING_URL} --schema -
-          # APOLLO_VCS_COMMIT: ${{ github.event.pull_request.head.sha }}
