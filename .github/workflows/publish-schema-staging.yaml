@@ -8,11 +8,12 @@ on:
 jobs:
   get_subgraph_name:
     uses: ./.github/workflows/apollo.yaml
-
+  schema_check:
+    uses: ./.github/workflows/check-schema-staging.yaml
   publish_schema:
     if: github.actor == 'vrover'
     name: Publish new schema to Apollo Studio
-    needs: [get_subgraph_name]
+    needs: [get_subgraph_name, schema_check]
     runs-on: ubuntu-latest
     env:
       APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
