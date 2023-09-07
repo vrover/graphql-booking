@@ -11,9 +11,7 @@ jobs:
     uses: ./.github/workflows/apollo.yaml
   schema_check:
     uses: ./.github/workflows/check-schema-staging.yaml
-    secrets:
-      APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
-      APOLLO_GRAPH_ID: ${{ secrets.APOLLO_GRAPH_ID }}
+    secrets: inherit
   publish_schema:
     if: github.actor == 'vrover'
     name: Publish new schema to Apollo Studio
