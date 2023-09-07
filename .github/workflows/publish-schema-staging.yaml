@@ -5,23 +5,22 @@ on:
   #   workflows: ["Staging Check Schema"]
   #   types:
   #     - completed
+env:
+  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+  APOLLO_GRAPH_ID: ${{ secrets.APOLLO_GRAPH_ID }}
+  PORT: 8080
+
 jobs:
   get_subgraph_name:
     uses: ./.github/workflows/apollo.yaml
   schema_check:
     uses: ./.github/workflows/check-schema-staging.yaml
-    with:
-      APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
-      APOLLO_GRAPH_ID: ${{ secrets.APOLLO_GRAPH_ID }}
   publish_schema:
     if: github.actor == 'vrover'
     name: Publish new schema to Apollo Studio
     needs: [get_subgraph_name, schema_check]
     runs-on: ubuntu-latest
     env:
-      APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
-      APOLLO_GRAPH_ID: ${{ secrets.APOLLO_GRAPH_ID }}
-      PORT: 8080
       ROUTING_URL: ${{ secrets.ROUTING_URL }}
     steps:
       - uses: actions/checkout@v3
